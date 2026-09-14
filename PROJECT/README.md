@@ -88,8 +88,8 @@ git --version
 Per chi vuole solo vedere il sistema funzionante, senza i dettagli di ogni passaggio — un solo comando avvia infrastruttura, segreti e i due microservizi (containerizzati, build inclusa):
 
 ```bash
-git clone <url-del-repository>
-cd PROJECT
+git clone https://github.com/g-picca/PugliaAgriTech.git
+cd PugliaAgriTech/PROJECT
 
 ./infrastructure/scripts/start.sh   # infrastruttura + Vault + consumer-service + report-service
 
