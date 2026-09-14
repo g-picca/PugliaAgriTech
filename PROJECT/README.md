@@ -150,7 +150,7 @@ cd sensors
 docker compose up -d --build
 ```
 
-Richiede che l'infrastruttura (passo 5.1) sia già avviata: i sensori si collegano alla rete Docker creata da `infrastructure/docker-compose.yml` e leggono la stessa chiave HMAC scritta in `sensors/.env` dal bootstrap di Vault. Pubblicano una lettura ogni 5 secondi ciascuno (due sensori: `OLIVO_SEC_001` di tipo TreeTalker, `AGRO_STATION_SUD` di tipo Agrometeo).
+Richiede che l'infrastruttura (passo 5.1) sia già avviata: i sensori si collegano alla rete Docker creata da `infrastructure/docker-compose.yml` e leggono la stessa chiave HMAC scritta in `sensors/.env` dal bootstrap di Vault. Pubblicano una lettura ogni 60 secondi ciascuno (due sensori: `OLIVO_SEC_001` di tipo TreeTalker, `AGRO_STATION_SUD` di tipo Agrometeo) — un intervallo comunque compresso rispetto ai 10-30 minuti tipici di sensori reali di questo tipo, per restare osservabile durante una demo.
 
 ## 6. Come verificare che tutto funzioni {#6-verifica}
 

@@ -11,7 +11,10 @@ services:
       MQTT_USER: mqtt_sensor_user
       MQTT_PASS: mqtt_sensor_password
       HMAC_KEY: ${HMAC_KEY}
-      INTERVAL_SECONDS: 5
+      # 60s: un sensore reale di questo tipo (dendrometro/TreeTalker) trasmette
+      # tipicamente ogni 10-30 minuti per risparmiare batteria; qui compresso
+      # per restare comunque osservabile durante una demo dal vivo.
+      INTERVAL_SECONDS: 60
     networks:
       - agritech-net
     restart: unless-stopped
@@ -28,7 +31,7 @@ services:
       MQTT_USER: mqtt_sensor_user
       MQTT_PASS: mqtt_sensor_password
       HMAC_KEY: ${HMAC_KEY}
-      INTERVAL_SECONDS: 5
+      INTERVAL_SECONDS: 60
     networks:
       - agritech-net
     restart: unless-stopped

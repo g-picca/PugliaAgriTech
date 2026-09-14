@@ -38,7 +38,7 @@ int main() {
     const std::string topic    = "agritech/sensors/treetalker";
 
     // Intervallo tra un invio e l'altro (secondi)
-    const int intervalSeconds = std::stoi(getEnv("INTERVAL_SECONDS", "5"));
+    const int intervalSeconds = std::stoi(getEnv("INTERVAL_SECONDS", "60"));
 
     // Generatore di numeri casuali per simulare le letture
     std::random_device rd;

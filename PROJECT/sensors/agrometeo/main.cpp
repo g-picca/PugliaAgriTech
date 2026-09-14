@@ -37,7 +37,7 @@ int main() {
     const std::string hmacKey  = getEnv("HMAC_KEY", "chiave_di_default");
     const std::string topic    = "agritech/sensors/agrometeo";
 
-    const int intervalSeconds = std::stoi(getEnv("INTERVAL_SECONDS", "5"));
+    const int intervalSeconds = std::stoi(getEnv("INTERVAL_SECONDS", "60"));
 
     // Generatore di numeri casuali per simulare le letture
     std::random_device rd;
