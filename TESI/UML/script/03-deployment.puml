@@ -1,0 +1,59 @@
+@startuml 03-deployment
+!theme plain
+title PugliAgriTech — Diagramma di deployment
+
+skinparam nodeStyle rectangle
+skinparam nodesep 60
+skinparam ranksep 70
+
+node "Docker Host" {
+
+    node "container: postgres\n<<PostgreSQL 16>>" as N_PG {
+        database "agritech_db\n(schemi: agritech, iam,\ntabella vault_kv_store)" as DB
+    }
+
+    node "container: vault\n<<HashiCorp Vault 1.17>>" as N_VAULT {
+        artifact "vault-bootstrap.sh\n(policy, AppRole, segreti)" as VA_ART
+    }
+
+    node "container: keycloak\n<<Keycloak 24.0>>" as N_KC {
+        artifact "agritech-realm.json\n(realm as code)" as KC_ART
+    }
+
+    node "container: rabbitmq\n<<RabbitMQ 4.0 + plugin MQTT/OAuth2>>" as N_MQ {
+        artifact "definitions.json\n(code, exchange, DLX)" as MQ_ART
+    }
+
+    node "container: consumer-service\n<<Spring Boot 4 / JRE 25>>" as N_CS
+    node "container: report-service\n<<Spring Boot 4 / JRE 25>>" as N_RS
+    node "container: sensor-tree-talker\n<<C++>>" as N_TT
+    node "container: sensor-agrometeo\n<<C++>>" as N_AG
+
+    N_TT -down-> N_MQ : MQTT :1883
+    N_AG -down-> N_MQ : MQTT :1883
+
+    N_CS -up-> N_MQ : AMQP :5672 (OAuth2)
+    N_RS -up-> N_MQ : AMQP :5672 (OAuth2)
+
+    N_CS -down-> N_PG : JDBC :5432
+    N_CS -left-> N_VAULT : HTTP :8200 (AppRole)
+    N_CS -left-> N_KC : HTTP :8080 (token endpoint)
+    N_RS -up-> N_VAULT : HTTP :8200 (AppRole)
+    N_RS -up-> N_KC : HTTP :8080 (token endpoint)
+
+    N_VAULT -down-> N_PG : JDBC :5432 (storage backend)
+    N_KC -down-> N_PG : JDBC :5432 (schema iam)
+}
+
+note bottom of N_CS
+  Porta pubblicata sull'host: 8090
+  (8091 per report-service)
+end note
+
+note right of N_MQ
+  Porte pubblicate sull'host:
+  1883 (MQTT), 5672 (AMQP),
+  15672 (management UI)
+end note
+
+@enduml

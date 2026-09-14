@@ -1,0 +1,37 @@
+@startuml 04-sequenza-ingestion
+!theme plain
+title Sequenza — Ingestion di una lettura sensore
+
+actor Sensore
+participant "RabbitMQ\n(coda sensor.data)" as MQ
+participant "SensorDataListener\n(consumer-service)" as Listener
+database "PostgreSQL" as DB
+
+Sensore -> MQ : publish(payload + signature) [MQTT]
+MQ -> Listener : deliver(message)
+
+Listener -> Listener : verifica firma HMAC-SHA256
+
+alt firma non valida
+    Listener -> DB : log ingestion_log\n(REJECTED_SIGNATURE)
+    Listener -> MQ : nack (→ dead-letter exchange)
+else firma valida
+    Listener -> DB : findByDeviceId(device_id)
+
+    alt dispositivo sconosciuto
+        Listener -> DB : findAuthorizedDevice\n(allowlist)
+
+        alt non presente in allowlist
+            Listener -> DB : log ingestion_log\n(REJECTED_UNAUTHORIZED_DEVICE)
+            Listener -> MQ : nack (→ dead-letter exchange)
+        else presente e sensor_type coerente
+            Listener -> DB : auto-provisiona Sensor
+        end
+    end
+
+    Listener -> DB : save SensorReading\n(processed = false)
+    Listener -> DB : log ingestion_log (ACCEPTED)
+    Listener -> MQ : ack
+end
+
+@enduml

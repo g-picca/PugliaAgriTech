@@ -1,0 +1,68 @@
+@startuml 07-classi-dominio
+!theme plain
+title PugliAgriTech — Modello dati (consumer-service)
+
+class SensorType {
+    +UUID id
+    +String name
+}
+
+class Sensor {
+    +UUID id
+    +String deviceId
+    +String location
+    +Boolean active
+}
+
+class SensorReading {
+    +UUID id
+    +String payload
+    +Instant receivedAt
+    +Boolean processed
+}
+
+class AuthorizedDevice {
+    +UUID id
+    +String deviceId
+    +String location
+    +Boolean active
+}
+
+class IngestionLog {
+    +UUID id
+    +String deviceId
+    +IngestionEventType eventType
+    +String detail
+    +Instant occurredAt
+}
+
+enum IngestionEventType {
+    ACCEPTED
+    REJECTED_SIGNATURE
+    REJECTED_UNAUTHORIZED_DEVICE
+    REJECTED_MALFORMED
+    ERROR
+}
+
+Sensor "1" -- "many" SensorReading : possiede >
+SensorType "1" -- "many" Sensor : classifica >
+SensorType "1" -- "many" AuthorizedDevice : classifica >
+IngestionLog -- IngestionEventType
+
+note right of SensorReading
+  'payload' è JSON grezzo (JSONB),
+  non deserializzato in oggetto:
+  ogni sensor_type ha campi diversi
+  (vedi AggregatableField, whitelist
+  usata dalle query di aggregazione).
+end note
+
+note right of AuthorizedDevice
+  Allowlist per l'auto-provisioning:
+  un device_id sconosciuto viene
+  accettato solo se presente qui,
+  con lo stesso sensor_type dichiarato
+  nel messaggio.
+end note
+
+@enduml

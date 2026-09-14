@@ -1,0 +1,47 @@
+@startuml 06-sequenza-report-giornaliero
+!theme plain
+title Sequenza — Generazione del report giornaliero
+
+participant "DailyReportScheduler /\nDailyReportController" as Trigger
+participant "DailyReportService" as DRS
+participant "ReportRequestService" as RRS
+participant "consumer-service\n(via RabbitMQ, vedi diagramma 05)" as CS
+participant "PdfReportBuilder" as PDF
+participant "ReportStorageService" as Storage
+
+Trigger -> DRS : generateDailyReport()
+activate DRS
+
+DRS -> DRS : cutoff = Instant.now()\n(unico per tutta la generazione)
+
+loop per ogni (sensorType, field) monitorato
+    DRS -> RRS : requestAggregation(AVG, onlyUnprocessed, cutoff)
+    RRS -> CS : RPC (diagramma 05)
+    CS --> RRS : ReportQueryResponse
+    RRS --> DRS : value, sampleCount
+
+    opt sampleCount > 0
+        DRS -> RRS : requestAggregation(MIN, ...)
+        DRS -> RRS : requestAggregation(MAX, ...)
+    end
+end
+
+DRS -> PDF : build(sezioni per sensorType)
+PDF --> DRS : bytes PDF
+
+DRS -> Storage : save(cutoff, bytes)
+
+alt salvataggio riuscito
+    Storage --> DRS : path
+    loop per ogni sensorType
+        DRS -> RRS : markProcessed(sensorType, cutoff)
+        RRS -> CS : comando (coda report.mark-processed)
+    end
+    DRS --> Trigger : GenerationResult.ok(path)
+else errore di generazione o salvataggio
+    DRS --> Trigger : GenerationResult.error(...)\n(nessun markProcessed:\nle letture restano "processed=false")
+end
+
+deactivate DRS
+
+@enduml

@@ -1,0 +1,56 @@
+@startuml 02-componenti
+!theme plain
+title PugliAgriTech — Diagramma dei componenti
+
+skinparam componentStyle rectangle
+skinparam nodesep 40
+skinparam ranksep 50
+
+package "Sensori (C++)" {
+    component "Sensore TreeTalker" as TT
+    component "Sensore Agrometeo" as AG
+}
+
+component "RabbitMQ" as MQ {
+    interface "MQTT :1883" as MQTT
+    interface "AMQP :5672" as AMQP
+}
+
+component "Keycloak\n(OAuth2 Identity Provider)" as KC
+component "HashiCorp Vault\n(secret store)" as VA
+database "PostgreSQL" as DB
+
+component "consumer-service" as CS {
+    interface "sensor.data listener" as CSIN
+    interface "report.requests /\nreport.mark-processed listener" as CSRPC
+}
+
+component "report-service" as RS {
+    interface "REST /api/reports/**" as RSREST
+}
+
+actor "Operatore" as OP
+
+TT -down-> MQTT : pubblica lettura firmata (HMAC)
+AG -down-> MQTT : pubblica lettura firmata (HMAC)
+
+MQ -[hidden]-> CSIN
+CSIN <.. AMQP : instrada su\ncoda sensor.data
+CS -down-> DB : JDBC\n(persistenza letture, JPA)
+
+RS -left-> AMQP : richiesta aggregazione\n(reply-to dinamico)
+AMQP ..> CSRPC : instrada su\ncode report.requests /\nreport.mark-processed
+
+CS ..> KC : Client Credentials\n(scope rabbitmq.read/write)
+RS ..> KC : Client Credentials\n(scope rabbitmq.write)
+MQ ..> KC : validazione JWT\n(chiave pubblica, offline)
+
+CS ..> VA : AppRole\n(chiave HMAC, credenziali DB,\nclient secret OAuth2)
+RS ..> VA : AppRole\n(client secret OAuth2)
+
+VA -down-> DB : storage backend (KV su tabella dedicata)
+KC -down-> DB : stato interno (schema iam)
+
+OP -up-> RSREST : genera / scarica report
+
+@enduml

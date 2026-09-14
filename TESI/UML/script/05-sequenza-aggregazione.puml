@@ -1,0 +1,29 @@
+@startuml 05-sequenza-aggregazione
+!theme plain
+title Sequenza — Richiesta di aggregazione (request-reply RPC)
+
+participant "ReportRequestService\n(report-service)" as RRS
+participant "RabbitMQ\n(amq.rabbitmq.reply-to)" as MQ
+participant "ReportRequestListener\n(consumer-service)" as RQL
+database "PostgreSQL" as DB
+
+RRS -> MQ : sendAndReceive(ReportQueryRequest,\nreplyTo = reply-to dinamico,\ntimeout = 5s)
+MQ -> RQL : deliver(request, replyTo, correlationId)
+
+RQL -> RQL : valida richiesta\n(campo/aggregazione/coerenza sensor_type)
+
+alt richiesta non valida
+    RQL -> MQ : reply(ReportQueryResponse con error)
+else richiesta valida
+    RQL -> DB : aggregate(...) via Criteria API\n(AVG/MIN/MAX/COUNT su payload JSONB)
+    DB --> RQL : risultato + sampleCount
+    RQL -> MQ : reply(ReportQueryResponse)
+end
+
+MQ -> RRS : deliver(response)
+
+alt nessuna risposta entro 5s
+    RRS -> RRS : response = null\n→ HTTP 504 al chiamante
+end
+
+@enduml

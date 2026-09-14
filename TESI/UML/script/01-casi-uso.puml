@@ -1,0 +1,50 @@
+@startuml 01-casi-uso
+!theme plain
+title PugliAgriTech — Diagramma dei casi d'uso
+
+left to right direction
+
+actor "Sensore IoT\n(TreeTalker / Agrometeo)" as Sensore
+actor "Operatore" as Operatore
+actor "Scheduler\n(cron interno)" as Scheduler
+
+rectangle "PugliAgriTech" {
+    usecase "Inviare una lettura firmata" as UC1
+    usecase "Verificare firma HMAC" as UC2
+    usecase "Autorizzare il dispositivo\n(allowlist)" as UC3
+    usecase "Persistere la lettura" as UC4
+    usecase "Richiedere un'aggregazione\n(AVG/MIN/MAX/COUNT)" as UC5
+    usecase "Generare il report giornaliero" as UC6
+    usecase "Generare il report on-demand" as UC7
+    usecase "Scaricare il report PDF" as UC8
+    usecase "Marcare le letture\ncome processate" as UC9
+}
+
+Sensore --> UC1
+
+UC1 ..> UC2 : <<include>>
+UC2 ..> UC3 : <<include>>
+UC3 ..> UC4 : <<include>>
+
+Scheduler --> UC6
+Operatore --> UC7
+Operatore --> UC8
+
+UC7 .down.> UC6 : <<extend>>
+UC6 ..> UC5 : <<include>>
+UC6 ..> UC9 : <<include>>
+
+note right of UC3
+  Se il dispositivo non è già noto,
+  viene auto-provisionato solo se
+  presente nell'allowlist con lo
+  stesso sensor_type dichiarato.
+end note
+
+note right of UC9
+  Solo dopo che il PDF è stato
+  salvato con successo (garanzia
+  "al massimo due volte, mai zero").
+end note
+
+@enduml
