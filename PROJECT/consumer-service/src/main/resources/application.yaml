@@ -1,0 +1,73 @@
+spring:
+  application:
+    name: consumer-service
+  config: # Importa i segreti da Vault come property sources all'avvio.
+    import: # Le contextual locations specificano esattamente quali percorsi leggere.
+      - vault://secret/agritech/shared        # chiave HMAC
+      - vault://secret/agritech/database       # credenziali PostgreSQL
+      - vault://secret/agritech/consumer-dati  # client_secret Keycloak
+  cloud:
+    vault:
+      uri: http://localhost:8200 # Endpoint di Vault (HTTP in sviluppo locale)
+      authentication: APPROLE # Autenticazione tramite AppRole (creato in Vault per il consumer)
+      app-role:
+        role-id: ${VAULT_ROLE_ID}       # passato come variabile d'ambiente
+        secret-id: ${VAULT_SECRET_ID}   # passato come variabile d'ambiente
+        app-role-path: approle
+      kv: # Il KV secrets engine v2 montato al path 'secret'
+        enabled: true
+        backend: secret
+      database:
+        enabled: false
+      config:
+        lifecycle:
+          enabled: false
+  datasource:
+    url: ${postgres-url}?currentSchema=agritech
+    username: ${postgres-username}
+    password: ${postgres-password}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        default_schema: agritech
+        format_sql: true
+    show-sql: false
+  flyway:
+    enabled: true
+    schemas: agritech
+    default-schema: agritech
+    locations: classpath:db/migration
+    url: ${postgres-url}
+    user: ${postgres-username}
+    password: ${postgres-password}
+  rabbitmq:
+    host: localhost
+    port: 5672
+
+server:
+  port: 8090
+
+agritech:
+  keycloak:
+    token-uri: http://localhost:8080/realms/agritech/protocol/openid-connect/token
+    client-id: consumer-dati
+    client-secret: ${keycloak-client-secret}
+  hmac:
+    secret-key: ${hmac-secret-key}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    it.puglia.agritech: INFO
+    org.springframework.amqp: INFO

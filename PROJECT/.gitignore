@@ -1,0 +1,10 @@
+/infrastructure/vault-init.json
+/infrastructure/info
+/infrastructure/.env
+/sensors/.env
+
+# IDE (progetto multi-modulo: .idea vive alla radice, non dentro ai singoli
+# servizi Maven, che hanno gia' la propria regola nel loro .gitignore)
+.idea/
+*.iml
+.claude/

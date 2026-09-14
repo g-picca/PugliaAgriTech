@@ -1,0 +1,5 @@
+# File di progetto IntelliJ a livello di workspace (LAUREA e' aperta come
+# progetto IntelliJ; PROJECT/ e i singoli microservizi hanno gia' le proprie
+# regole equivalenti nei rispettivi .gitignore annidati).
+.idea/
+*.iml

@@ -1,0 +1,54 @@
+spring:
+  application:
+    name: report-service
+  config:
+    import:
+      - vault://secret/agritech/consumer-report  # client_secret Keycloak
+  cloud:
+    vault:
+      uri: http://localhost:8200
+      authentication: APPROLE
+      app-role:
+        role-id: ${VAULT_ROLE_ID}
+        secret-id: ${VAULT_SECRET_ID}
+        app-role-path: approle
+      kv:
+        enabled: true
+        backend: secret
+      database:
+        enabled: false
+      config:
+        lifecycle:
+          enabled: false
+  rabbitmq:
+    host: localhost
+    port: 5672
+
+server:
+  port: 8091
+
+agritech:
+  keycloak:
+    token-uri: http://localhost:8080/realms/agritech/protocol/openid-connect/token
+    client-id: consumer-report
+    client-secret: ${keycloak-client-secret}
+  reports:
+    # Cartella dove salvare i PDF generati. Deve stare fuori da
+    # src/main/resources: quel percorso viene impacchettato dentro il jar in
+    # fase di build (sola lettura a runtime), inadatto a file scritti
+    # dall'applicazione mentre gira.
+    storage-path: ./reports
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    it.puglia.agritech: INFO
+    org.springframework.amqp: INFO

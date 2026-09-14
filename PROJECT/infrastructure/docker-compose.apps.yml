@@ -1,0 +1,61 @@
+# I due microservizi Java, containerizzati separatamente da
+# docker-compose.yml (infrastruttura pura) per lo stesso motivo per cui i
+# sensori (sensors/docker-compose.yml) sono in un file a parte: vanno avviati
+# DOPO che Vault e' stato inizializzato e bootstrappato (scripts/start.sh),
+# non insieme al resto - un 'docker compose up' che li includesse tutti
+# partirebbe con consumer-service/report-service ancora privi delle
+# credenziali AppRole che vault-bootstrap.sh genera in un passo successivo.
+#
+# Uso: infrastructure/scripts/start.sh li avvia automaticamente al momento
+# giusto. Per farlo manualmente: da dentro infrastructure/,
+#   docker compose -p agritech-apps -f docker-compose.apps.yml up -d --build
+# (nome di progetto esplicito per non confondersi con quello, diverso, di
+# docker-compose.yml - stessa directory, file separati)
+
+services:
+  consumer-service:
+    build:
+      context: ../consumer-service
+    container_name: agritech-consumer-service
+    env_file:
+      - ../consumer-service/.env   # VAULT_ROLE_ID / VAULT_SECRET_ID (generati da vault-bootstrap.sh)
+    environment:
+      # Stessi segreti (Vault, credenziali DB, client secret OAuth2), ma
+      # raggiunti tramite gli hostname della rete Docker invece che
+      # 'localhost' - unica differenza rispetto all'esecuzione locale via
+      # mvnw (vedi README).
+      SPRING_CLOUD_VAULT_URI: http://vault:8200
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/agritech_db?currentSchema=agritech
+      SPRING_FLYWAY_URL: jdbc:postgresql://postgres:5432/agritech_db
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      AGRITECH_KEYCLOAK_TOKEN_URI: http://keycloak:8080/realms/agritech/protocol/openid-connect/token
+    ports:
+      - "8090:8090"
+    networks:
+      - agritech-net
+    restart: unless-stopped
+
+  report-service:
+    build:
+      context: ../report-service
+    container_name: agritech-report-service
+    env_file:
+      - ../report-service/.env
+    environment:
+      SPRING_CLOUD_VAULT_URI: http://vault:8200
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      AGRITECH_KEYCLOAK_TOKEN_URI: http://keycloak:8080/realms/agritech/protocol/openid-connect/token
+    ports:
+      - "8091:8091"
+    volumes:
+      - ../report-service/reports:/app/reports
+    networks:
+      - agritech-net
+    restart: unless-stopped
+
+networks:
+  agritech-net:
+    external: true
+    name: infrastructure_agritech-net

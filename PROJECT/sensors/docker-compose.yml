@@ -1,0 +1,40 @@
+services:
+  # SENSORE TREE TALKER (salute olivo / Xylella)
+  tree-talker:
+    build:
+      context: .
+      dockerfile: tree_talker/Dockerfile
+    container_name: sensor-tree-talker
+    environment:
+      MQTT_BROKER: tcp://rabbitmq:1883
+      DEVICE_ID: OLIVO_SEC_001
+      MQTT_USER: mqtt_sensor_user
+      MQTT_PASS: mqtt_sensor_password
+      HMAC_KEY: ${HMAC_KEY}
+      INTERVAL_SECONDS: 5
+    networks:
+      - agritech-net
+    restart: unless-stopped
+
+  # SENSORE AGROMETEO (condizioni ambientali)
+  agrometeo:
+    build:
+      context: .
+      dockerfile: agrometeo/Dockerfile
+    container_name: sensor-agrometeo
+    environment:
+      MQTT_BROKER: tcp://rabbitmq:1883
+      DEVICE_ID: AGRO_STATION_SUD
+      MQTT_USER: mqtt_sensor_user
+      MQTT_PASS: mqtt_sensor_password
+      HMAC_KEY: ${HMAC_KEY}
+      INTERVAL_SECONDS: 5
+    networks:
+      - agritech-net
+    restart: unless-stopped
+
+# Si collega alla rete già creata dall'infrastruttura
+networks:
+  agritech-net:
+    external: true
+    name: infrastructure_agritech-net

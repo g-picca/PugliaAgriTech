@@ -1,0 +1,8 @@
+# Gli script bash devono avere fine riga LF indipendentemente dal
+# core.autocrlf di chi clona il repository (su Windows e' spesso 'true' per
+# default): con CRLF uno script bash puo' non eseguirsi affatto (shebang
+# '#!/usr/bin/env bash\r' non riconosciuto) o comportarsi in modo
+# imprevedibile. Stessa regola gia' applicata a 'mvnw' nei .gitattributes
+# di consumer-service/report-service (generati da Spring Initializr).
+*.sh text eol=lf
+Dockerfile text eol=lf

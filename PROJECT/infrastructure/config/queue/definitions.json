@@ -1,0 +1,173 @@
+{
+  "rabbit_version": "4.0.0",
+  "users": [
+    {
+      "name": "admin",
+      "password": "admin",
+      "tags": ["administrator"]
+    },
+    {
+      "name": "mqtt_sensor_user",
+      "password": "mqtt_sensor_password",
+      "tags": []
+    }
+  ],
+  "vhosts": [
+    {
+      "name": "/"
+    }
+  ],
+  "permissions": [
+    {
+      "user": "admin",
+      "vhost": "/",
+      "configure": ".*",
+      "write": ".*",
+      "read": ".*"
+    },
+    {
+      "user": "mqtt_sensor_user",
+      "vhost": "/",
+      "configure": "^mqtt-subscription-.*",
+      "write": "^(amq\\.topic|agritech\\.sensors\\..*)$",
+      "read": "^(amq\\.topic|mqtt-subscription-.*)$"
+    }
+  ],
+  "topic_permissions": [
+    {
+      "user": "mqtt_sensor_user",
+      "vhost": "/",
+      "exchange": "amq.topic",
+      "write": "^agritech\\.sensors\\..*$",
+      "read": "^agritech\\.sensors\\..*$"
+    }
+  ],
+  "exchanges": [
+    {
+      "name": "agritech.sensors",
+      "vhost": "/",
+      "type": "topic",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    },
+    {
+      "name": "agritech.reports",
+      "vhost": "/",
+      "type": "direct",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    },
+    {
+      "name": "agritech.dlx",
+      "vhost": "/",
+      "type": "direct",
+      "durable": true,
+      "auto_delete": false,
+      "internal": false,
+      "arguments": {}
+    }
+  ],
+  "queues": [
+    {
+      "name": "sensor.data",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-dead-letter-exchange": "agritech.dlx",
+        "x-dead-letter-routing-key": "sensor.failed"
+      }
+    },
+    {
+      "name": "report.requests",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-dead-letter-exchange": "agritech.dlx",
+        "x-dead-letter-routing-key": "report.failed",
+        "x-message-ttl": 1800000,
+        "x-max-priority": 1
+      }
+    },
+    {
+      "name": "report.mark-processed",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {
+        "x-dead-letter-exchange": "agritech.dlx",
+        "x-dead-letter-routing-key": "report.failed",
+        "x-message-ttl": 1800000
+      }
+    },
+    {
+      "name": "sensor.dlq",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    },
+    {
+      "name": "report.dlq",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false,
+      "arguments": {}
+    }
+  ],
+  "bindings": [
+    {
+      "source": "amq.topic",
+      "vhost": "/",
+      "destination": "sensor.data",
+      "destination_type": "queue",
+      "routing_key": "agritech.sensors.#",
+      "arguments": {}
+    },
+    {
+      "source": "agritech.sensors",
+      "vhost": "/",
+      "destination": "sensor.data",
+      "destination_type": "queue",
+      "routing_key": "agritech.sensors.#",
+      "arguments": {}
+    },
+    {
+      "source": "agritech.reports",
+      "vhost": "/",
+      "destination": "report.requests",
+      "destination_type": "queue",
+      "routing_key": "report.generate",
+      "arguments": {}
+    },
+    {
+      "source": "agritech.reports",
+      "vhost": "/",
+      "destination": "report.mark-processed",
+      "destination_type": "queue",
+      "routing_key": "report.mark-processed",
+      "arguments": {}
+    },
+    {
+      "source": "agritech.dlx",
+      "vhost": "/",
+      "destination": "sensor.dlq",
+      "destination_type": "queue",
+      "routing_key": "sensor.failed",
+      "arguments": {}
+    },
+    {
+      "source": "agritech.dlx",
+      "vhost": "/",
+      "destination": "report.dlq",
+      "destination_type": "queue",
+      "routing_key": "report.failed",
+      "arguments": {}
+    }
+  ]
+}
