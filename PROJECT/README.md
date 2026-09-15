@@ -74,6 +74,8 @@ Solo due strumenti, entrambi gratuiti e multipiattaforma, per eseguire e verific
 
 Non serve installare Java, Maven, né il client CLI di Vault o Keycloak: la build dei due microservizi avviene interamente dentro i container Docker.
 
+**Spazio su disco**: le immagini Docker dell'intero stack (Postgres, Vault, Keycloak, RabbitMQ, i due microservizi Java, i sensori simulati) occupano complessivamente circa **3 GB** una volta costruite — i due microservizi condividono lo stesso layer di base, quindi lo spazio reale è inferiore alla somma delle singole immagini. Considerando anche l'immagine JDK usata solo in fase di build e la cache temporanea di Maven, si consiglia di avere **almeno 5 GB liberi** per un primo avvio completo da zero.
+
 **Verifica dei prerequisiti** (da un terminale, Git Bash su Windows):
 
 ```bash
