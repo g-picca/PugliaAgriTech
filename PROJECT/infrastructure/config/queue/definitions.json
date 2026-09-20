@@ -29,15 +29,15 @@
       "user": "mqtt_sensor_user",
       "vhost": "/",
       "configure": "^mqtt-subscription-.*",
-      "write": "^(amq\\.topic|agritech\\.sensors\\..*)$",
-      "read": "^(amq\\.topic|mqtt-subscription-.*)$"
+      "write": "^agritech\\.sensors$",
+      "read": "^(agritech\\.sensors|mqtt-subscription-.*)$"
     }
   ],
   "topic_permissions": [
     {
       "user": "mqtt_sensor_user",
       "vhost": "/",
-      "exchange": "amq.topic",
+      "exchange": "agritech.sensors",
       "write": "^agritech\\.sensors\\..*$",
       "read": "^agritech\\.sensors\\..*$"
     }
@@ -121,14 +121,6 @@
     }
   ],
   "bindings": [
-    {
-      "source": "amq.topic",
-      "vhost": "/",
-      "destination": "sensor.data",
-      "destination_type": "queue",
-      "routing_key": "agritech.sensors.#",
-      "arguments": {}
-    },
     {
       "source": "agritech.sensors",
       "vhost": "/",
