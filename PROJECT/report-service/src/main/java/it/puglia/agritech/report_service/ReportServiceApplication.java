@@ -9,7 +9,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication
 @EnableScheduling
 @OpenAPIDefinition(info = @Info(
-        title = "AgriTech report-service",
+        title = "PugliAgriTech report-service",
         description = "Generazione e download del report PDF giornaliero sui dati dei sensori "
                 + "(TreeTalker/Agrometeo), e query di aggregazione su richiesta. Non persiste "
                 + "nulla direttamente: recupera i dati da consumer-service via RabbitMQ "
