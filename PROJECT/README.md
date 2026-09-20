@@ -1,4 +1,4 @@
-# AgriTech Middleware — Monitoraggio Uliveti Puglia (PW12)
+# PugliAgriTech — Monitoraggio Uliveti Puglia (PW12)
 
 Middleware per il monitoraggio agronomico di uliveti in Puglia, finalizzato alla rilevazione precoce della Xylella fastidiosa e di altre patologie degli alberi. Sensori IoT (TreeTalker e stazioni Agrometeo) inviano letture periodiche a un broker AMQP protetto con autenticazione OAuth2 e firma HMAC; un microservizio le valida e le persiste su PostgreSQL; un secondo microservizio genera, con cadenza giornaliera, un report PDF aggregato scaricabile via REST.
 
